@@ -1,7 +1,11 @@
+
+---
+
 ```markdown
 # 🎓 AI-Based Exam Seating & Invigilation Scheduling System
 
-> **A Smart, Conflict-Free Exam Hall Allocation System using ADA Algorithms**   
+> **A Smart, Conflict-Free Exam Hall Allocation System using ADA Algorithms**  
+> ✅ Covers All 6 Course Outcomes (CO-1 to CO-6)  
 > ✅ Built with HTML, CSS, JavaScript — No Backend Required  
 > ✅ Deployed & Ready for Live Demo
 
