@@ -1,5 +1,3 @@
----
-
 ```markdown
 # 🎓 AI-Based Exam Seating & Invigilation Scheduling System
 
