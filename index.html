@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 AI Exam Seating & Invigilation System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="main-header">
+            <h1><i class="fas fa-graduation-cap"></i> AI-Based Exam Seating & Invigilation System</h1>
+            <p>Smart, Conflict-Free Scheduling for Colleges / Universities</p>
+        </header>
+
+        <!-- Control Tabs -->
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="input">📊 Dataset</button>
+            <button class="tab-btn" data-tab="schedule">📅 Generate Schedule</button>
+            <button class="tab-btn" data-tab="seating">🪑 Allocate Seats</button>
+            <button class="tab-btn" data-tab="search">🔍 Search & Results</button>
+            <button class="tab-btn" data-tab="performance">📈 Performance</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- DATASET TAB -->
+            <div id="input" class="tab-pane active">
+                <div class="input-grid">
+                    <div class="input-card">
+                        <h2><i class="fas fa-database"></i> Current Dataset</h2>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="studentCount">0</div>
+                                <div class="stat-label">Students</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="hallCount">0</div>
+                                <div class="stat-label">Halls</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="profCount">0</div>
+                                <div class="stat-label">Professors</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="subjectCount">0</div>
+                                <div class="stat-label">Subjects</div>
+                            </div>
+                        </div>
+                        <div class="controls" style="margin-top: 30px;">
+                            <button id="loadDefaultBtn" class="btn-secondary"><i class="fas fa-sync"></i> Load Default (900+)</button>
+                            <button id="loadLargeBtn" class="btn-primary"><i class="fas fa-bolt"></i> Load Large (5000+)</button>
+                        </div>
+                    </div>
+
+                    <div class="input-card">
+                        <h2><i class="fas fa-filter"></i> Filter Students</h2>
+                        <div class="form-group">
+                            <select id="filterDept">
+                                <option value="">All Departments</option>
+                                <option value="CSE">CSE</option>
+                                <option value="IT">IT</option>
+                                <option value="Mechanical">Mechanical</option>
+                                <option value="Civil">Civil</option>
+                                <option value="Electrical">Electrical</option>
+                            </select>
+                            <select id="filterYear">
+                                <option value="">All Years</option>
+                                <option value="FY">FY</option>
+                                <option value="SY">SY</option>
+                                <option value="TY">TY</option>
+                                <option value="LY">LY</option>
+                            </select>
+                            <select id="filterDiv">
+                                <option value="">All Divisions</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                            </select>
+                            <button id="applyFilterBtn" class="btn-add"><i class="fas fa-filter"></i> Apply Filter</button>
+                        </div>
+                        <div class="data-list" id="filteredStudentsList">
+                            <p class="placeholder">Apply filters to see students.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCHEDULE TAB -->
+            <div id="schedule" class="tab-pane">
+                <div class="result-card">
+                    <h2><i class="fas fa-calendar-alt"></i> Master Exam Schedule (Topological Sort)</h2>
+                    <div class="controls">
+                        <button id="generateScheduleBtn" class="btn-primary"><i class="fas fa-play"></i> Generate Schedule</button>
+                    </div>
+                    <div id="scheduleOutput" class="output-area">
+                        <p class="placeholder">Click "Generate Schedule" to create master timetable.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEATING TAB -->
+            <div id="seating" class="tab-pane">
+                <div class="result-card">
+                    <h2><i class="fas fa-chair"></i> Seating Allocation with Conflict Avoidance</h2>
+                    <div class="controls">
+                        <button id="allocateSeatsBtn" class="btn-primary"><i class="fas fa-users"></i> Allocate Seats</button>
+                    </div>
+                    <div id="seatingOutput" class="output-area">
+                        <p class="placeholder">Click "Allocate Seats" to assign students to halls.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEARCH TAB -->
+            <div id="search" class="tab-pane">
+                <div class="result-card">
+                    <h2><i class="fas fa-search"></i> Search Students</h2>
+                    <div class="form-group">
+                        <input type="text" id="searchQuery" placeholder="Search by name, roll, or ID...">
+                        <button id="searchBtn" class="btn-secondary"><i class="fas fa-search"></i> Search</button>
+                    </div>
+                    <div id="searchResults" class="output-area">
+                        <p class="placeholder">Enter a query and click Search.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERFORMANCE TAB -->
+            <div id="performance" class="tab-pane">
+                <div class="result-card">
+                    <h2><i class="fas fa-tachometer-alt"></i> Performance & Complexity Analysis</h2>
+                    <div class="controls">
+                        <button id="analyzeBtn" class="btn-secondary"><i class="fas fa-chart-line"></i> Analyze Performance</button>
+                    </div>
+                    <div id="performanceMetrics" class="output-area">
+                        <p class="placeholder">Click "Analyze Performance" to see complexity metrics.</p>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h2><i class="fas fa-brain"></i> NP-Completeness Discussion</h2>
+                    <div class="np-box">
+                        <h3>Why This Problem is NP-Complete</h3>
+                        <p>The perfect exam seating problem — where no two students sharing a subject sit in the same hall — is equivalent to the <strong>Graph Coloring Problem</strong>.</p>
+                        <ul>
+                            <li>Each student is a "node"</li>
+                            <li>An "edge" exists between students who share at least one subject</li>
+                            <li>Assigning halls = coloring nodes so no adjacent nodes have same color</li>
+                        </ul>
+                        <p>Since Graph Coloring is NP-Complete, we use <strong>heuristic algorithms</strong> (like our conflict-avoidance greedy approach) to find practical, near-optimal solutions in polynomial time.</p>
+                        <p>This demonstrates how ADA helps solve real-world NP-Complete problems!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
