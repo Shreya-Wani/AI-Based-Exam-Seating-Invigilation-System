@@ -28,15 +28,14 @@
 
 ## ✅ Course Outcomes (COs) Covered
 
-| CO       | Description | Implementation |
-|----------|-------------|----------------|
-| **CO-1** | Analyze time complexity | `O(n × m)` seating, `O(V + E)` scheduling, displayed in UI |
-| **CO-2** | Recurrence relations | Discussed in NP-Completeness section (Graph Coloring → recurrence for coloring) |
-| **CO-3** | Greedy / Dynamic Programming | **Greedy First-Fit Bin Packing** for seating allocation |
-| **CO-4** | String Matching | Search by name, roll, ID using `.includes()` |
-| **CO-5** | P vs NP / NP-Completeness | **Graph Coloring → NP-Complete** → Heuristic solution (fill halls sequentially) |
-| **CO-6** | Graph Algorithms | **Topological Sort** for exam scheduling, DFS/BFS implied in conflict detection |
-
+| CO | Description | Implementation |
+|----|-------------|----------------|
+| **CO1** | Analyze time complexity | `O(n × m)` seating, `O(V + E)` scheduling, displayed in UI |
+| **CO2** | Recurrence relations | Discussed in NP-Completeness section (Graph Coloring → recurrence for coloring) |
+| **CO3** | Greedy / Dynamic Programming | **Greedy First-Fit Bin Packing** for seating allocation |
+| **CO4** | String Matching | Search by name, roll, ID using `.includes()` |
+| **CO5** | P vs NP / NP-Completeness | Graph Coloring → NP-Complete → Heuristic solution (fill halls sequentially) |
+| **CO6** | Graph Algorithms | Topological Sort for exam scheduling, DFS/BFS implied in conflict detection |
 
 ---
 
