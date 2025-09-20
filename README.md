@@ -1,11 +1,6 @@
-
----
-
-```markdown
 # 🎓 AI-Based Exam Seating & Invigilation Scheduling System
 
-> **A Smart, Conflict-Free Exam Hall Allocation System using ADA Algorithms**  
-> ✅ Covers All 6 Course Outcomes (CO-1 to CO-6)  
+> **A Smart, Conflict-Free Exam Hall Allocation System using ADA Algorithms**
 > ✅ Built with HTML, CSS, JavaScript — No Backend Required  
 > ✅ Deployed & Ready for Live Demo
 
@@ -13,8 +8,7 @@
 
 ## 🚀 Live Demo
 
-🔗 **[Click Here to View Live Demo](https://your-github-username.github.io/AI-Based-Exam-Seating-Invigilation-System/)**  
-*(Replace with your actual GitHub Pages URL after deployment)*
+🔗 **[Click Here to View Live Demo](https://ai-based-exam-seating-invigilation.vercel.app/)**  
 
 ---
 
@@ -49,7 +43,7 @@
 
 - **Frontend**: HTML5, CSS3, JavaScript (ES6)
 - **Algorithms**: Greedy, Topological Sort, String Matching, Graph Coloring Heuristic
-- **Deployment**: vercel (Free, No Backend)
+- **Deployment**: GitHub Pages (Free, No Backend)
 - **UI/UX**: Responsive, Animated, Professional Design
 
 ---
