@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const tabPanes = document.querySelectorAll('.tab-pane');
 
     const loadDefaultBtn = document.getElementById('loadDefaultBtn');
-    const loadLargeBtn = document.getElementById('loadLargeBtn');
     const applyFilterBtn = document.getElementById('applyFilterBtn');
     const generateScheduleBtn = document.getElementById('generateScheduleBtn');
     const allocateSeatsBtn = document.getElementById('allocateSeatsBtn');
@@ -12,8 +11,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const analyzeBtn = document.getElementById('analyzeBtn');
 
     const filterDept = document.getElementById('filterDept');
-    const filterYear = document.getElementById('filterYear');
+    const filterSem = document.getElementById('filterSem');
     const filterDiv = document.getElementById('filterDiv');
+    const scheduleDeptSelect = document.getElementById('scheduleDept');
+    const scheduleSemSelect = document.getElementById('scheduleSem');
+    const examDaySelect = document.getElementById('examDay');
     const searchQueryInput = document.getElementById('searchQuery');
 
     const scheduleOutput = document.getElementById('scheduleOutput');
@@ -27,19 +29,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const profCountEl = document.getElementById('profCount');
     const subjectCountEl = document.getElementById('subjectCount');
 
-    // ✅ Store filtered students globally
-    let currentFilteredStudents = [];
+    const seatingDeptSelect = document.getElementById('seatingDept');
+    const seatingSemSelect = document.getElementById('seatingSem');
+    const seatingSubjectSelect = document.getElementById('seatingSubject');
+
+    // ✅ PDF Button (may not exist on initial load — check first)
+    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
 
     // Global Data
     let students = [];
     let halls = [];
     let professors = [];
-    let subjects = {};
+    const semesterSchedules = {};
 
     // Initialize
     initializeDefaultDataset();
     updateStats();
-    currentFilteredStudents = [...students];
     renderFilteredStudents(students.slice(0, 50));
 
     // Tab Switching
@@ -56,105 +61,236 @@ document.addEventListener('DOMContentLoaded', function () {
     loadDefaultBtn.addEventListener('click', () => {
         initializeDefaultDataset();
         updateStats();
-        currentFilteredStudents = [...students];
         renderFilteredStudents(students.slice(0, 50));
         filterDept.value = "";
-        filterYear.value = "";
+        filterSem.value = "";
         filterDiv.value = "";
-        alert('✅ Loaded default dataset (900+ students)');
-    });
-
-    // Load Large Dataset
-    loadLargeBtn.addEventListener('click', () => {
-        initializeLargeDataset();
-        updateStats();
-        currentFilteredStudents = [...students];
-        renderFilteredStudents(students.slice(0, 50));
-        filterDept.value = "";
-        filterYear.value = "";
-        filterDiv.value = "";
-        alert('✅ Loaded large dataset (5000+ students)');
+        if (downloadPdfBtn) downloadPdfBtn.style.display = 'none';
+        alert('✅ Loaded default dataset (960 students)');
     });
 
     // Apply Filter
     applyFilterBtn.addEventListener('click', () => {
         const dept = filterDept.value;
-        const year = filterYear.value;
+        const sem = filterSem.value ? parseInt(filterSem.value) : null;
         const div = filterDiv.value;
 
         let filtered = [...students];
+        if (dept) filtered = filtered.filter(s => s.dept === dept);
+        if (sem !== null) filtered = filtered.filter(s => s.semester === sem);
+        if (div) filtered = filtered.filter(s => s.division === div);
 
-        if (dept) {
-            filtered = filtered.filter(s => s.dept === dept);
-        }
-        if (year) {
-            filtered = filtered.filter(s => s.year === year);
-        }
-        if (div) {
-            filtered = filtered.filter(s => s.division === div);
-        }
-
-        currentFilteredStudents = filtered;
         renderFilteredStudents(filtered);
     });
 
-    // Generate Schedule
+    // Generate/Edit Schedule for ONE SEMESTER ONLY
     generateScheduleBtn.addEventListener('click', () => {
-        try {
-            const schedule = generateMasterSchedule();
-            let html = '<div class="schedule-container">';
-            schedule.forEach((subject, i) => {
-                html += `
-                    <div class="seat-card" style="background: rgba(76, 201, 240, 0.2); border-color: rgba(76, 201, 240, 0.5);">
-                        <div>Slot ${i + 1}</div>
-                        <div class="roll">${subject}</div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            scheduleOutput.innerHTML = html;
-        } catch (error) {
-            scheduleOutput.innerHTML = `<p style="color: #f87171;">Error: ${error.message}</p>`;
-        }
-    });
+        const dept = scheduleDeptSelect.value;
+        const sem = scheduleSemSelect.value;
 
-    // Allocate Seats — ✅ Uses ONLY filtered students + Sequential Hall Filling
-    allocateSeatsBtn.addEventListener('click', () => {
-        if (students.length === 0 || halls.length === 0) {
-            seatingOutput.innerHTML = '<p class="placeholder">Please load dataset first.</p>';
+        if (!dept || !sem) {
+            scheduleOutput.innerHTML = '<p class="placeholder">Please select both department and semester.</p>';
+            if (downloadPdfBtn) downloadPdfBtn.style.display = 'none';
             return;
         }
 
-        const studentsToAllocate = currentFilteredStudents.length > 0 ? currentFilteredStudents : students;
+        const key = `${dept}-${sem}`;
+        const subjects = getSubjectsForDept(dept)[parseInt(sem)] || [];
 
-        const allocation = allocateSeatsWithConflictAvoidance(studentsToAllocate, halls);
-        let html = '';
+        if (subjects.length === 0) {
+            scheduleOutput.innerHTML = '<p class="placeholder">No subjects found for this semester.</p>';
+            if (downloadPdfBtn) downloadPdfBtn.style.display = 'none';
+            return;
+        }
 
-        for (const [hallName, assignedStudents] of Object.entries(allocation)) {
-            html += `<h3 style="color: var(--accent); margin: 25px 0 15px 0;">🏫 ${hallName} (${assignedStudents.length}/${halls.find(h => h.name === hallName)?.capacity || 0})</h3>`;
-            if (assignedStudents.length === 0) {
-                continue;
+        let html = `<h3 style="margin-bottom: 20px; color: var(--accent);">📅 Edit Exam Dates for ${dept} - Sem ${sem}</h3>`;
+        html += '<div class="date-inputs-container">';
+
+        subjects.forEach(subject => {
+            const savedDate = semesterSchedules[key]?.[subject] || '';
+            html += `
+            <div class="date-input-row">
+                <span class="date-input-label">${subject}</span>
+                <input type="date" class="date-input" data-key="${key}" data-subject="${subject}" value="${savedDate}">
+            </div>
+        `;
+        });
+
+        html += `</div><br>
+        <button id="saveSemesterDatesBtn" class="btn-primary">
+            <i class="fas fa-save"></i> Save Dates for Sem ${sem}
+        </button>`;
+
+        scheduleOutput.innerHTML = html;
+
+        // Re-attach save button listener (since innerHTML replaces DOM)
+        document.getElementById('saveSemesterDatesBtn').onclick = () => {
+            if (!semesterSchedules[key]) semesterSchedules[key] = {};
+            subjects.forEach(subject => {
+                const input = document.querySelector(`input[data-key="${key}"][data-subject="${subject}"]`);
+                if (input) {
+                    semesterSchedules[key][subject] = input.value;
+                }
+            });
+            alert(`✅ Saved exam dates for ${dept} - Sem ${sem}`);
+
+            // ✅ AUTO-SHOW SCHEDULE TABLE + PDF BUTTON
+            const schedule = semesterSchedules[key] || {};
+            const dateSubjectMap = {};
+            for (const [sub, date] of Object.entries(schedule)) {
+                if (date) {
+                    if (!dateSubjectMap[date]) dateSubjectMap[date] = [];
+                    dateSubjectMap[date].push(sub);
+                }
             }
 
-            assignedStudents.forEach(student => {
-                html += `
-                    <div class="seat-card">
-                        <div class="roll">${student.roll}</div>
-                        <div class="name">${student.name}</div>
-                        <div style="font-size: 0.8rem; color: var(--gray);">${student.dept}-${student.year}-${student.division}</div>
-                    </div>
+            const sortedDates = Object.keys(dateSubjectMap).sort();
+            if (sortedDates.length === 0) {
+                scheduleOutput.innerHTML = '<p class="placeholder">No dates saved yet.</p>';
+                if (downloadPdfBtn) downloadPdfBtn.style.display = 'none';
+                return;
+            }
+
+            let tableHtml = `
+                <div class="schedule-table-container">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Date</th>
+                                <th>Subject(s)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            sortedDates.forEach((date, i) => {
+                const subjectsList = dateSubjectMap[date].join(', ');
+                const displayDate = new Date(date).toLocaleDateString('en-GB');
+                tableHtml += `
+                    <tr>
+                        <td><strong>Day ${i + 1}</strong></td>
+                        <td>${displayDate}</td>
+                        <td>${subjectsList}</td>
+                    </tr>
                 `;
             });
 
-            // Assign invigilator
-            const hallIndex = halls.findIndex(h => h.name === hallName);
+            tableHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            scheduleOutput.innerHTML = tableHtml;
+            if (downloadPdfBtn) {
+                downloadPdfBtn.style.display = 'inline-block';
+            }
+        };
+    });
+
+    // When department or semester changes in Seating tab, update subject list
+    seatingDeptSelect.addEventListener('change', updateSeatingSubjects);
+    seatingSemSelect.addEventListener('change', updateSeatingSubjects);
+
+    function updateSeatingSubjects() {
+        const dept = seatingDeptSelect.value;
+        const sem = seatingSemSelect.value;
+        const subjectSelect = seatingSubjectSelect;
+
+        // Clear dropdown
+        subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+
+        if (!dept || !sem) return;
+
+        // Get subjects for this department and semester
+        const subjects = getSubjectsForDept(dept)[parseInt(sem)] || [];
+
+        if (subjects.length === 0) {
+            const option = document.createElement('option');
+            option.value = "";
+            option.textContent = "No subjects defined for this semester";
+            option.disabled = true;
+            subjectSelect.appendChild(option);
+            return;
+        }
+
+        // Add each subject to dropdown
+        subjects.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject;
+            option.textContent = subject;
+            subjectSelect.appendChild(option);
+        });
+    }
+
+    // Allocate Seats — By Subject (Manual Selection Only)
+    allocateSeatsBtn.addEventListener('click', () => {
+        const dept = seatingDeptSelect.value;
+        const sem = seatingSemSelect.value;
+        const subject = seatingSubjectSelect.value;
+
+        if (!dept || !sem || !subject) {
+            seatingOutput.innerHTML = '<p class="placeholder">Please select department, semester, and subject.</p>';
+            return;
+        }
+
+        // Get all students taking this subject in this department/semester
+        const studentsForSubject = students.filter(s =>
+            s.dept === dept &&
+            s.semester === parseInt(sem) &&
+            s.subjects.includes(subject)
+        );
+
+        if (studentsForSubject.length === 0) {
+            seatingOutput.innerHTML = `<p class="placeholder">No students found for ${subject} in ${dept} Sem ${sem}.</p>`;
+            return;
+        }
+
+        // Allocate to halls sequentially
+        const allocation = {};
+        const sortedHalls = [...halls].sort((a, b) => a.name.localeCompare(b.name));
+        let hallIndex = 0;
+        let i = 0;
+
+        while (i < studentsForSubject.length && hallIndex < sortedHalls.length) {
+            const hall = sortedHalls[hallIndex];
+            if (!allocation[hall.name]) {
+                allocation[hall.name] = { subject, students: [] };
+            }
+
+            const space = hall.capacity - allocation[hall.name].students.length;
+            const toAssign = studentsForSubject.slice(i, i + space);
+            allocation[hall.name].students.push(...toAssign);
+
+            i += space;
+            if (allocation[hall.name].students.length >= hall.capacity) {
+                hallIndex++;
+            }
+        }
+
+        // Render output
+        let html = '';
+        for (const [hallName, data] of Object.entries(allocation)) {
+            html += `<h3 style="color: var(--accent); margin: 25px 0 15px 0;">🏫 ${hallName} → <strong>${data.subject}</strong> (${data.students.length}/${halls.find(h => h.name === hallName)?.capacity || 0})</h3>`;
+            data.students.forEach(student => {
+                html += `
+                <div class="seat-card">
+                    <div class="roll">${student.roll}</div>
+                    <div class="name">${student.name}</div>
+                    <div style="font-size: 0.8rem; color: var(--gray);">${student.dept}-Sem${student.semester}-${student.division}</div>
+                </div>
+            `;
+            });
+
+            const hallIndexProf = halls.findIndex(h => h.name === hallName);
             if (professors.length > 0) {
-                const prof = professors[hallIndex % professors.length];
+                const prof = professors[hallIndexProf % professors.length];
                 html += `<p style="margin-top: 15px; color: var(--success);"><i class="fas fa-chalkboard-teacher"></i> Invigilator: ${prof}</p>`;
             }
         }
 
-        seatingOutput.innerHTML = html || '<p class="placeholder">No seating allocated.</p>';
+        seatingOutput.innerHTML = html || '<p class="placeholder">No students allocated.</p>';
     });
 
     // Search Students
@@ -181,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function () {
             html += `
                 <div class="search-result-item">
                     <strong>${student.name}</strong> (${student.roll})<br>
-                    <small>ID: ${student.id} | ${student.dept}-${student.year}-${student.division}</small><br>
+                    <small>ID: ${student.id} | ${student.dept}-Sem${student.semester}-${student.division}</small><br>
                     <small>Subjects: ${student.subjects.join(', ')}</small>
                 </div>
             `;
@@ -192,7 +328,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Analyze Performance
     analyzeBtn.addEventListener('click', () => {
-        const metrics = analyzePerformance();
+        const n = students.length;
+        const m = halls.length;
+        const s = new Set();
+        students.forEach(st => st.subjects.forEach(s.add, s));
+        const metrics = {
+            seatingComplexity: `O(n × m) = O(${n} × ${m})`,
+            schedulingComplexity: `O(1) per semester`,
+            searchComplexity: `O(n × len)`,
+            spaceComplexity: `O(n + m + ${s.size})`,
+            subjectCount: s.size
+        };
+
         let html = `
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
                 <div style="background: rgba(76, 201, 240, 0.1); padding: 20px; border-radius: 15px;">
@@ -205,177 +352,133 @@ document.addEventListener('DOMContentLoaded', function () {
                     <h4>💾 Space Complexity</h4>
                     <p>${metrics.spaceComplexity}</p>
                     <h4 style="color: #fbbf24; margin-top: 20px;">📊 Dataset Size</h4>
-                    <p>Students: ${students.length.toLocaleString()}</p>
-                    <p>Halls: ${halls.length}</p>
+                    <p>Students: ${n.toLocaleString()}</p>
+                    <p>Halls: ${m}</p>
                     <p>Professors: ${professors.length}</p>
                     <p>Subjects: ${metrics.subjectCount}</p>
                 </div>
             </div>
             <div style="margin-top: 30px; background: rgba(251, 191, 36, 0.1); padding: 20px; border-radius: 15px; border-left: 4px solid #fbbf24;">
                 <h4>🧩 Algorithmic Approach</h4>
-                <p><strong>Seating:</strong> Greedy with Conflict Avoidance Heuristic (First-Fit)</p>
-                <p><strong>Scheduling:</strong> Topological Sort for Subject Dependencies</p>
+                <p><strong>Seating:</strong> Greedy Bin Packing (Fill Hall 1 → Hall 2)</p>
+                <p><strong>Scheduling:</strong> Teacher-Defined Dates per Semester</p>
                 <p><strong>Search:</strong> Linear String Matching</p>
-                <p><strong>NP-Completeness:</strong> Perfect solution = Graph Coloring → NP-Complete → Heuristics used</p>
+                <p><strong>NP-Completeness:</strong> Perfect conflict-free seating = Graph Coloring → NP-Complete → Heuristics used</p>
             </div>
         `;
         performanceMetrics.innerHTML = html;
     });
 
-    // Initialize Functions
+    // Helper Functions
     function initializeDefaultDataset() {
         const depts = ["CSE", "IT", "Mechanical", "Civil", "Electrical"];
-        const yrs = ["FY", "SY", "TY", "LY"];
-        const divs = ["A", "B", "C"];
-
-        subjects = {
-            // CSE
-            "CSE-FY-A": ["Math-I", "Physics", "BEE", "Workshop", "Engg Drawing"],
-            "CSE-FY-B": ["Math-I", "Physics", "BEE", "Workshop", "Engg Drawing"],
-            "CSE-SY-A": ["DSA", "COA", "Math-II", "Chemistry", "PPS"],
-            "CSE-SY-B": ["DSA", "COA", "Math-II", "Chemistry", "PPS"],
-            "CSE-TY-A": ["DBMS", "OS", "CN", "TOC", "SE"],
-            "CSE-TY-B": ["DBMS", "OS", "CN", "TOC", "SE"],
-            "CSE-LY-A": ["AI", "ML", "Blockchain", "Cloud", "Project"],
-            "CSE-LY-B": ["AI", "ML", "Blockchain", "Cloud", "Project"],
-            "CSE-LY-C": ["AI", "ML", "Blockchain", "Cloud", "Project"],
-
-            // IT
-            "IT-FY-A": ["Math-I", "Physics", "BEE", "Workshop", "Engg Drawing"],
-            "IT-FY-B": ["Math-I", "Physics", "BEE", "Workshop", "Engg Drawing"],
-            "IT-SY-A": ["DSA", "COA", "Math-II", "Chemistry", "PPS"],
-            "IT-SY-B": ["DSA", "COA", "Math-II", "Chemistry", "PPS"],
-            "IT-TY-A": ["DBMS", "OS", "CN", "Web Tech", "SE"],
-            "IT-TY-B": ["DBMS", "OS", "CN", "Web Tech", "SE"],
-            "IT-LY-A": ["AI", "ML", "Cybersecurity", "Cloud", "Project"],
-            "IT-LY-B": ["AI", "ML", "Cybersecurity", "Cloud", "Project"],
-            "IT-LY-C": ["AI", "ML", "Cybersecurity", "Cloud", "Project"],
-
-            // Mechanical
-            "Mechanical-FY-A": ["Math-I", "Physics", "BEE", "Workshop", "Engg Drawing"],
-            "Mechanical-FY-B": ["Math-I", "Physics", "BEE", "Workshop", "Engg Drawing"],
-            "Mechanical-SY-A": ["Thermo", "Mechanics", "Math-II", "Materials", "CAD"],
-            "Mechanical-SY-B": ["Thermo", "Mechanics", "Math-II", "Materials", "CAD"],
-            "Mechanical-TY-A": ["Fluid Mech", "Heat Transfer", "Dynamics", "Design", "Lab"],
-            "Mechanical-TY-B": ["Fluid Mech", "Heat Transfer", "Dynamics", "Design", "Lab"],
-            "Mechanical-LY-A": ["Automobile", "Robotics", "Project", "Elective-I", "Elective-II"],
-            "Mechanical-LY-B": ["Automobile", "Robotics", "Project", "Elective-I", "Elective-II"],
-            "Mechanical-LY-C": ["Automobile", "Robotics", "Project", "Elective-I", "Elective-II"],
-
-            // Civil
-            "Civil-FY-A": ["Math-I", "Physics", "BEE", "Workshop", "Engg Drawing"],
-            "Civil-FY-B": ["Math-I", "Physics", "BEE", "Workshop", "Engg Drawing"],
-            "Civil-SY-A": ["Strength", "FM", "Math-II", "Geology", "CAD"],
-            "Civil-SY-B": ["Strength", "FM", "Math-II", "Geology", "CAD"],
-            "Civil-TY-A": ["Structures", "Hydraulics", "Transport", "Geotech", "Design"],
-            "Civil-TY-B": ["Structures", "Hydraulics", "Transport", "Geotech", "Design"],
-            "Civil-LY-A": ["Project", "Earthquake", "Smart Cities", "Management", "Enviro"],
-            "Civil-LY-B": ["Project", "Earthquake", "Smart Cities", "Management", "Enviro"],
-            "Civil-LY-C": ["Project", "Earthquake", "Smart Cities", "Management", "Enviro"],
-
-            // Electrical
-            "Electrical-FY-A": ["Math-I", "Physics", "BEE", "Workshop", "Engg Drawing"],
-            "Electrical-FY-B": ["Math-I", "Physics", "BEE", "Workshop", "Engg Drawing"],
-            "Electrical-SY-A": ["Circuits", "EMF", "Math-II", "Electronics", "PPS"],
-            "Electrical-SY-B": ["Circuits", "EMF", "Math-II", "Electronics", "PPS"],
-            "Electrical-TY-A": ["Power Sys", "Machines", "Control", "PSD", "SE"],
-            "Electrical-TY-B": ["Power Sys", "Machines", "Control", "PSD", "SE"],
-            "Electrical-LY-A": ["Renewables", "Smart Grid", "Project", "Drives", "IoT"],
-            "Electrical-LY-B": ["Renewables", "Smart Grid", "Project", "Drives", "IoT"],
-            "Electrical-LY-C": ["Renewables", "Smart Grid", "Project", "Drives", "IoT"]
-        };
+        const divisions = ["A", "B", "C", "D"];
 
         students = [];
-        let studentId = 1;
+        let id = 1;
         for (const dept of depts) {
-            for (const year of yrs) {
-                for (const div of divs) {
-                    const key = `${dept}-${year}-${div}`;
-                    if (subjects[key]) {
-                        for (let i = 1; i <= 60; i++) {
-                            students.push({
-                                id: `STU${String(studentId).padStart(5, '0')}`,
-                                name: `${getRandomName()} ${getRandomLastName()}`,
-                                roll: `${dept}/${year}/${div}/${i}`,
-                                dept,
-                                year,
-                                division: div,
-                                subjects: subjects[key]
-                            });
-                            studentId++;
-                        }
+            for (let sem = 1; sem <= 8; sem++) {
+                for (const div of divisions) {
+                    for (let i = 1; i <= 15; i++) {
+                        students.push({
+                            id: `STU${String(id).padStart(5, '0')}`,
+                            name: `${getRandomName()} ${getRandomLastName()}`,
+                            roll: `${dept}/Sem${sem}/${div}/${i}`,
+                            dept,
+                            semester: sem,
+                            division: div,
+                            subjects: getSubjectsForDept(dept)[sem] || []
+                        });
+                        id++;
                     }
                 }
             }
         }
 
         halls = [];
-        for (let i = 1; i <= 50; i++) {
+        for (let i = 1; i <= 20; i++) {
             halls.push({
                 name: `Hall_${String(i).padStart(3, '0')}`,
-                capacity: Math.floor(Math.random() * 30) + 20
+                capacity: 40
             });
         }
 
         professors = [];
         const firstNames = ["Dr. Smith", "Prof. Johnson", "Dr. Williams", "Prof. Brown", "Dr. Jones"];
         const lastNames = ["Patel", "Sharma", "Kumar", "Singh", "Gupta"];
-        for (let i = 1; i <= 50; i++) {
+        for (let i = 1; i <= 30; i++) {
             const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
             const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
             professors.push(`${firstName} ${lastName}`);
         }
     }
 
-    function initializeLargeDataset() {
-        students = [];
-        let studentId = 1;
-        const depts = ["CSE", "IT", "Mech", "Civil", "Elec", "EXTC", "BioTech"];
-        const yrs = ["FY", "SY", "TY", "LY"];
-        const divs = ["A", "B", "C", "D"];
-
-        for (let d = 0; d < depts.length; d++) {
-            for (let y = 0; y < yrs.length; y++) {
-                for (let div = 0; div < divs.length; div++) {
-                    for (let i = 1; i <= 30; i++) {
-                        students.push({
-                            id: `STU${String(studentId).padStart(6, '0')}`,
-                            name: `${getRandomName()} ${getRandomLastName()}`,
-                            roll: `${depts[d]}/${yrs[y]}/${divs[div]}/${i}`,
-                            dept: depts[d],
-                            year: yrs[y],
-                            division: divs[div],
-                            subjects: ["Subject1", "Subject2", "Subject3"]
-                        });
-                        studentId++;
-                    }
-                }
+    function getSubjectsForDept(dept) {
+        const deptSubjects = {
+            "CSE": {
+                1: ["BME", "Physics", "Math-I", "Workshop", "Engg Drawing", "EVS"],
+                2: ["DSA", "COA", "Math-III", "Digital Logic", "OOPs", "Java"],
+                3: ["DBMS", "OS", "CN", "TOC", "SE", "Elective-I"],
+                4: ["AI", "ML", "Cloud", "Cybersecurity", "Elective-II", "Project-I"],
+                5: ["Blockchain", "Big Data", "IoT", "Elective-III", "Project-II"],
+                6: ["Distributed Systems", "Mobile Computing", "Elective-IV", "Project-III"],
+                7: ["Internship", "Elective-V", "Soft Skills", "Ethics"],
+                8: ["Viva", "Elective-VI", "Research", "Seminar"]
+            },
+            "IT": {
+                1: ["BME", "Physics", "Math-I", "Workshop", "Engg Drawing", "EVS"],
+                2: ["DSA", "COA", "Math-III", "Web Tech", "OOPs", "PHP"],
+                3: ["DBMS", "OS", "CN", "Java", "SE", "Elective-I"],
+                4: ["AI", "ML", "Cloud", "Cybersecurity", "Elective-II", "Project-I"],
+                5: ["Blockchain", "Big Data", "IoT", "Elective-III", "Project-II"],
+                6: ["Distributed Systems", "Mobile Computing", "Elective-IV", "Project-III"],
+                7: ["Internship", "Elective-V", "Soft Skills", "Ethics"],
+                8: ["Viva", "Elective-VI", "Research", "Seminar"]
+            },
+            "Mechanical": {
+                1: ["BME", "Physics", "Math-I", "Workshop", "Engg Drawing", "EVS"],
+                2: ["Thermo", "FM", "Materials", "CAD", "Mechanics", "Elective"],
+                3: ["Heat Transfer", "Dynamics", "Design", "Lab", "Elective"],
+                4: ["Fluid Mech", "Machines", "Control", "PSD", "SE"],
+                5: ["Automobile", "Robotics", "Project", "Elective-I", "Elective-II"],
+                6: ["CFD", "FEM", "Project-II", "Elective-III"],
+                7: ["Internship", "Elective-IV", "Soft Skills", "Ethics"],
+                8: ["Viva", "Elective-V", "Research", "Seminar"]
+            },
+            "Civil": {
+                1: ["BME", "Physics", "Math-I", "Workshop", "Engg Drawing", "EVS"],
+                2: ["Strength", "FM", "Survey", "Geotech", "Materials", "Elective"],
+                3: ["Structures", "Hydraulics", "Transport", "Design", "Lab"],
+                4: ["Earthquake", "Smart Cities", "Project", "Elective-I", "Elective-II"],
+                5: ["Management", "Enviro", "Project-II", "Elective-III"],
+                6: ["Elective-IV", "Elective-V", "Project-III"],
+                7: ["Internship", "Elective-VI", "Soft Skills", "Ethics"],
+                8: ["Viva", "Elective-VII", "Research", "Seminar"]
+            },
+            "Electrical": {
+                1: ["BME", "Physics", "Math-I", "Workshop", "Engg Drawing", "EVS"],
+                2: ["Circuits", "Machines", "Control", "PSD", "SE"],
+                3: ["Power Sys", "Drives", "IoT", "Elective-I", "Elective-II"],
+                4: ["Renewables", "Smart Grid", "Project", "Elective-III"],
+                5: ["Project-II", "Elective-IV", "Elective-V"],
+                6: ["Elective-VI", "Elective-VII", "Project-III"],
+                7: ["Internship", "Elective-VIII", "Soft Skills", "Ethics"],
+                8: ["Viva", "Elective-IX", "Research", "Seminar"]
             }
-        }
-
-        halls = [];
-        for (let i = 1; i <= 100; i++) {
-            halls.push({
-                name: `Hall_${String(i).padStart(3, '0')}`,
-                capacity: Math.floor(Math.random() * 50) + 30
-            });
-        }
-
-        professors = [];
-        const firstNames = ["Dr. Smith", "Prof. Johnson", "Dr. Williams", "Prof. Brown", "Dr. Jones", "Dr. Wilson", "Prof. Anderson"];
-        const lastNames = ["Patel", "Sharma", "Kumar", "Singh", "Gupta", "Mishra", "Verma"];
-        for (let i = 1; i <= 100; i++) {
-            const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-            const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-            professors.push(`${firstName} ${lastName}`);
-        }
+        };
+        return deptSubjects[dept] || {};
     }
 
     function updateStats() {
         studentCountEl.textContent = students.length.toLocaleString();
         hallCountEl.textContent = halls.length;
         profCountEl.textContent = professors.length;
-        subjectCountEl.textContent = new Set(Object.values(subjects).flat()).size;
+        let totalSubjects = 0;
+        const allSubjects = getSubjectsForDept("CSE");
+        for (const sem in allSubjects) {
+            totalSubjects += allSubjects[sem].length;
+        }
+        subjectCountEl.textContent = totalSubjects;
     }
 
     function renderFilteredStudents(studentList) {
@@ -391,7 +494,7 @@ document.addEventListener('DOMContentLoaded', function () {
             div.innerHTML = `
                 <div>
                     <strong>${student.name}</strong><br>
-                    <small>${student.roll} | ${student.dept}-${student.year}-${student.division}</small>
+                    <small>${student.roll} | ${student.dept}-Sem${student.semester}-${student.division}</small>
                 </div>
             `;
             filteredStudentsList.appendChild(div);
@@ -407,140 +510,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ✅ FIXED: Sequential Hall Filling + Conflict Avoidance (No overwriting original halls)
-    function allocateSeatsWithConflictAvoidance(students, halls) {
-        // ✅ Sort halls by name to ensure Hall_001, Hall_002, etc.
-        const sortedHalls = [...halls].sort((a, b) => a.name.localeCompare(b.name));
-
-        const allocation = {};
-        sortedHalls.forEach(hall => allocation[hall.name] = []);
-
-        // Make a copy of students to avoid modifying original
-        let studentsToAllocate = [...students];
-
-        // Process each hall in strict sequential order
-        for (const hall of sortedHalls) {
-            // Phase 1: Assign students WITHOUT conflicts (ideal case)
-            for (let i = 0; i < studentsToAllocate.length && allocation[hall.name].length < hall.capacity; i++) {
-                const student = studentsToAllocate[i];
-                let hasConflict = false;
-
-                // Check for conflicts with already seated students in this hall
-                for (const seatedStudent of allocation[hall.name]) {
-                    const commonSubjects = student.subjects.filter(s =>
-                        seatedStudent.subjects.includes(s)
-                    );
-                    if (commonSubjects.length > 0) {
-                        hasConflict = true;
-                        break;
-                    }
-                }
-
-                // If no conflict, assign to this hall
-                if (!hasConflict) {
-                    allocation[hall.name].push(student);
-                    studentsToAllocate.splice(i, 1);
-                    i--; // Adjust index after removal
-                }
-            }
-
-            // Phase 2: If hall still has space, fill it with ANY remaining students (ignore conflicts)
-            for (let i = 0; i < studentsToAllocate.length && allocation[hall.name].length < hall.capacity; i++) {
-                const student = studentsToAllocate[i];
-                allocation[hall.name].push(student);
-                studentsToAllocate.splice(i, 1);
-                i--; // Adjust index after removal
-            }
-
-            // Only move to next hall if current hall is FULL or no students left
-            if (allocation[hall.name].length < hall.capacity && studentsToAllocate.length > 0) {
-                console.warn(`Hall ${hall.name} not fully filled (${allocation[hall.name].length}/${hall.capacity}), but moving to next hall due to no more students.`);
-            }
-        }
-
-        return allocation;
-    }
-
-    // ADA Algorithms
-    function generateMasterSchedule() {
-        const dependencies = {};
-        const allSubjects = new Set();
-
-        Object.values(subjects).forEach(subList => {
-            subList.forEach(sub => {
-                allSubjects.add(sub);
-                if (!dependencies[sub]) dependencies[sub] = [];
-            });
-        });
-
-        const prereqs = {
-            "DSA": ["PPS"],
-            "DBMS": ["DSA"],
-            "OS": ["COA"],
-            "CN": ["COA"],
-            "TOC": ["Math-II"],
-            "AI": ["DBMS", "Math-II"],
-            "ML": ["AI", "Math-II"]
-        };
-
-        for (const [course, prereqList] of Object.entries(prereqs)) {
-            if (dependencies[course]) {
-                dependencies[course].push(...prereqList.filter(p => allSubjects.has(p)));
-            }
-        }
-
-        return topologicalSort(dependencies);
-    }
-
-    function analyzePerformance() {
-        const n = students.length;
-        const m = halls.length;
-        const s = new Set(Object.values(subjects).flat()).size;
-
-        return {
-            seatingComplexity: `O(n × m) = O(${n} × ${m}) = O(${(n * m).toLocaleString()})`,
-            schedulingComplexity: `O(V + E) ≈ O(${s} + ${Math.floor(s * 0.3)})`,
-            searchComplexity: `O(n × len) for string matching`,
-            spaceComplexity: `O(n + m + s) for data structures`,
-            subjectCount: s
-        };
-    }
-
-    function topologicalSort(dependencies) {
-        const allCourses = new Set([...Object.keys(dependencies), ...Object.values(dependencies).flat()]);
-        const reverseGraph = {};
-        const inDegree = {};
-
-        allCourses.forEach(course => {
-            reverseGraph[course] = [];
-            inDegree[course] = 0;
-        });
-
-        for (const [course, prereqs] of Object.entries(dependencies)) {
-            prereqs.forEach(prereq => {
-                reverseGraph[prereq].push(course);
-                inDegree[course]++;
-            });
-        }
-
-        const queue = [...allCourses].filter(course => inDegree[course] === 0);
-        const result = [];
-
-        while (queue.length > 0) {
-            const current = queue.shift();
-            result.push(current);
-            reverseGraph[current].forEach(neighbor => {
-                inDegree[neighbor]--;
-                if (inDegree[neighbor] === 0) queue.push(neighbor);
-            });
-        }
-
-        if (result.length !== allCourses.size) {
-            throw new Error("Cycle detected in prerequisites!");
-        }
-        return result;
-    }
-
     function getRandomName() {
         const names = ["Aarav", "Vihaan", "Aditya", "Arjun", "Reyansh", "Ananya", "Aadhya", "Diya", "Pari", "Anika"];
         return names[Math.floor(Math.random() * names.length)];
@@ -549,5 +518,59 @@ document.addEventListener('DOMContentLoaded', function () {
     function getRandomLastName() {
         const names = ["Patel", "Sharma", "Kumar", "Singh", "Gupta", "Mishra", "Verma", "Yadav", "Joshi", "Pandey"];
         return names[Math.floor(Math.random() * names.length)];
+    }
+
+    // ✅ Download Schedule as PDF (only if button exists)
+    if (downloadPdfBtn) {
+        downloadPdfBtn.addEventListener('click', () => {
+            const dept = scheduleDeptSelect.value;
+            const sem = scheduleSemSelect.value;
+            if (!dept || !sem) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Title
+            doc.setFontSize(18);
+            doc.text(`Exam Schedule: ${dept} - Semester ${sem}`, 14, 20);
+            doc.setFontSize(12);
+            doc.text('Generated by AI-Based Exam Seating System', 14, 27);
+
+            // Table data
+            const schedule = semesterSchedules[`${dept}-${sem}`] || {};
+            const entries = [];
+
+            for (const [subject, date] of Object.entries(schedule)) {
+                if (date) {
+                    entries.push({ date, subject });
+                }
+            }
+
+            if (entries.length === 0) {
+                doc.text("No schedule available.", 14, 40);
+            } else {
+                // Sort by date
+                entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                let y = 45;
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Day', 14, y);
+                doc.text('Date', 50, y);
+                doc.text('Subject', 90, y);
+                doc.setFont('helvetica', 'normal');
+
+                y += 8;
+                entries.forEach((entry, i) => {
+                    const displayDate = new Date(entry.date).toLocaleDateString('en-GB');
+                    doc.text(`Day ${i + 1}`, 14, y);
+                    doc.text(displayDate, 50, y);
+                    doc.text(entry.subject, 90, y);
+                    y += 7;
+                });
+            }
+
+            doc.save(`Exam_Schedule_${dept}_Sem${sem}.pdf`);
+        });
     }
 });

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,20 +9,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
+
 <body>
     <div class="app-wrapper">
         <!-- Header -->
         <header class="main-header">
             <h1><i class="fas fa-graduation-cap"></i> AI-Based Exam Seating & Invigilation System</h1>
-            <p>Smart, Conflict-Free Scheduling for Colleges / Universities</p>
+            <p>Real University Exam Management: Calendar-Based Scheduling | Department-Wise Timetables</p>
         </header>
 
         <!-- Control Tabs -->
         <div class="tabs-container">
             <button class="tab-btn active" data-tab="input">📊 Dataset</button>
-            <button class="tab-btn" data-tab="schedule">📅 Generate Schedule</button>
+            <button class="tab-btn" data-tab="schedule">📅 Exam Schedule</button>
             <button class="tab-btn" data-tab="seating">🪑 Allocate Seats</button>
-            <button class="tab-btn" data-tab="search">🔍 Search & Results</button>
+            <button class="tab-btn" data-tab="search">🔍 Search Students</button>
             <button class="tab-btn" data-tab="performance">📈 Performance</button>
         </div>
 
@@ -51,8 +53,7 @@
                             </div>
                         </div>
                         <div class="controls" style="margin-top: 30px;">
-                            <button id="loadDefaultBtn" class="btn-secondary"><i class="fas fa-sync"></i> Load Default (900+)</button>
-                            <button id="loadLargeBtn" class="btn-primary"><i class="fas fa-bolt"></i> Load Large (5000+)</button>
+                            <button id="loadDefaultBtn" class="btn-secondary"><i class="fas fa-sync"></i> Load Default Dataset</button>
                         </div>
                     </div>
 
@@ -67,18 +68,23 @@
                                 <option value="Civil">Civil</option>
                                 <option value="Electrical">Electrical</option>
                             </select>
-                            <select id="filterYear">
-                                <option value="">All Years</option>
-                                <option value="FY">FY</option>
-                                <option value="SY">SY</option>
-                                <option value="TY">TY</option>
-                                <option value="LY">LY</option>
+                            <select id="filterSem">
+                                <option value="">All Semesters</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                                <option value="3">Semester 3</option>
+                                <option value="4">Semester 4</option>
+                                <option value="5">Semester 5</option>
+                                <option value="6">Semester 6</option>
+                                <option value="7">Semester 7</option>
+                                <option value="8">Semester 8</option>
                             </select>
                             <select id="filterDiv">
                                 <option value="">All Divisions</option>
                                 <option value="A">A</option>
                                 <option value="B">B</option>
                                 <option value="C">C</option>
+                                <option value="D">D</option>
                             </select>
                             <button id="applyFilterBtn" class="btn-add"><i class="fas fa-filter"></i> Apply Filter</button>
                         </div>
@@ -92,12 +98,37 @@
             <!-- SCHEDULE TAB -->
             <div id="schedule" class="tab-pane">
                 <div class="result-card">
-                    <h2><i class="fas fa-calendar-alt"></i> Master Exam Schedule (Topological Sort)</h2>
-                    <div class="controls">
-                        <button id="generateScheduleBtn" class="btn-primary"><i class="fas fa-play"></i> Generate Schedule</button>
+                    <h2><i class="fas fa-calendar-alt"></i> Exam Schedule Generator</h2>
+                    <div class="form-group">
+                        <select id="scheduleDept">
+                            <option value="">Select Department</option>
+                            <option value="CSE">CSE</option>
+                            <option value="IT">IT</option>
+                            <option value="Mechanical">Mechanical</option>
+                            <option value="Civil">Civil</option>
+                            <option value="Electrical">Electrical</option>
+                        </select>
+                        <select id="scheduleSem">
+                            <option value="">Select Semester</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                        <button id="generateScheduleBtn" class="btn-primary"><i class="fas fa-play"></i> Generate/Edit Schedule</button>
                     </div>
                     <div id="scheduleOutput" class="output-area">
-                        <p class="placeholder">Click "Generate Schedule" to create master timetable.</p>
+                        <p class="placeholder">Select department and semester, then click "Generate/Edit Schedule".</p>
+                    </div>
+                    <!-- PDF Download Button (Hidden by default) -->
+                    <div style="text-align: center; margin-top: 20px; display: none;" id="pdfDownloadContainer">
+                        <button id="downloadPdfBtn" class="btn-primary">
+                            <i class="fas fa-file-pdf"></i> Download Schedule as PDF
+                        </button>
                     </div>
                 </div>
             </div>
@@ -105,12 +136,35 @@
             <!-- SEATING TAB -->
             <div id="seating" class="tab-pane">
                 <div class="result-card">
-                    <h2><i class="fas fa-chair"></i> Seating Allocation with Conflict Avoidance</h2>
-                    <div class="controls">
+                    <h2><i class="fas fa-chair"></i> Seating Allocation by Exam Day</h2>
+                    <div class="form-group">
+                        <select id="seatingDept">
+                            <option value="">Select Department</option>
+                            <option value="CSE">CSE</option>
+                            <option value="IT">IT</option>
+                            <option value="Mechanical">Mechanical</option>
+                            <option value="Civil">Civil</option>
+                            <option value="Electrical">Electrical</option>
+                        </select>
+                        <select id="seatingSem">
+                            <option value="">Select Semester</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                        <select id="seatingSubject">
+                            <option value="">Select Subject</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
                         <button id="allocateSeatsBtn" class="btn-primary"><i class="fas fa-users"></i> Allocate Seats</button>
                     </div>
                     <div id="seatingOutput" class="output-area">
-                        <p class="placeholder">Click "Allocate Seats" to assign students to halls.</p>
+                        <p class="placeholder">Select a day and click "Allocate Seats".</p>
                     </div>
                 </div>
             </div>
@@ -159,6 +213,19 @@
         </div>
     </div>
 
+    <!-- Calendar Modal -->
+    <div id="calendarModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Select Exam Dates for <span id="modalDept">Department</span></h3>
+            <div id="datePickerContainer"></div>
+            <button id="saveDatesBtn" class="btn-primary">Save Dates</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
+     <!-- jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
+
 </html>

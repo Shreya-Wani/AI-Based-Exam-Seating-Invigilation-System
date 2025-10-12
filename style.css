@@ -25,6 +25,71 @@ body {
     line-height: 1.6;
 }
 
+/* ==================== PROFESSIONAL DATE INPUTS - LEFT ALIGNED ==================== */
+
+.date-inputs-container {
+    background: rgba(30, 41, 59, 0.7);
+    border-radius: 20px;
+    padding: 25px;
+    margin: 20px 0;
+    max-width: 600px; /* Keep it compact */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.date-input-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.date-input-row:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.date-input-label {
+    min-width: 120px;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+.date-input {
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    border-radius: 8px;
+    font-size: 1rem;
+    flex: 1;
+    max-width: 250px;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(76, 201, 240, 0.3);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(1.5);
+    cursor: pointer;
+}
+
+.date-input::-webkit-calendar-picker-indicator:hover {
+    filter: invert(1) brightness(2);
+}
+
 .app-wrapper {
     max-width: 1600px;
     margin: 0 auto;
@@ -69,6 +134,7 @@ body {
         opacity: 0;
         transform: translateY(-30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -122,8 +188,13 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* Input Grid */
@@ -221,7 +292,9 @@ body {
     box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
 }
 
-.btn-add, .btn-primary, .btn-secondary {
+.btn-add,
+.btn-primary,
+.btn-secondary {
     padding: 12px 20px;
     border: none;
     border-radius: 12px;
@@ -434,31 +507,101 @@ body {
     margin: 20px 0;
 }
 
+/* ==================== SCHEDULE TABLE STYLING ==================== */
+.schedule-table-container {
+    overflow-x: auto;
+    margin: 20px 0;
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.schedule-table th,
+.schedule-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f1f5f9;
+    font-size: 0.9rem;
+}
+
+.schedule-table th {
+    background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.schedule-table tr:nth-child(even) {
+    background: rgba(30, 41, 59, 0.4);
+}
+
+.schedule-table tr:hover {
+    background: rgba(67, 97, 238, 0.25);
+    transform: translateY(-2px);
+    transition: all 0.2s ease;
+}
+
+.schedule-table td:first-child {
+    font-weight: bold;
+    color: #4cc9f0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .main-header h1 {
         font-size: 2rem;
     }
-    
+
     .input-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .tabs-container {
         flex-direction: column;
         align-items: center;
     }
-    
+
     .controls {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .form-group {
         flex-direction: column;
+    }
+
+    .date-inputs-container {
+        background: rgba(15, 23, 42, 0.3);
+        padding: 20px;
+        border-radius: 15px;
+        margin: 20px 0;
+    }
+
+    .date-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .date-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
     }
 }
