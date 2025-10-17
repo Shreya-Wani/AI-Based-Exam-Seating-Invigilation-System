@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-
+~
 <body>
     <div class="app-wrapper">
         <!-- Header -->
@@ -23,6 +23,7 @@
             <button class="tab-btn" data-tab="schedule">📅 Exam Schedule</button>
             <button class="tab-btn" data-tab="seating">🪑 Allocate Seats</button>
             <button class="tab-btn" data-tab="search">🔍 Search Students</button>
+            <button class="tab-btn" data-tab="performance">📈 Performance</button>
         </div>
 
         <!-- Tab Content -->
@@ -122,12 +123,6 @@
                     <div id="scheduleOutput" class="output-area">
                         <p class="placeholder">Select department and semester, then click "Generate/Edit Schedule".</p>
                     </div>
-                    <!-- PDF Download Button (Hidden by default) -->
-                    <div style="text-align: center; margin-top: 20px; display: none;" id="pdfDownloadContainer">
-                        <button id="downloadPdfBtn" class="btn-primary">
-                            <i class="fas fa-file-pdf"></i> Download Schedule as PDF
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -222,8 +217,7 @@
     </div>
 
     <script src="script.js"></script>
-     <!-- jsPDF Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+     
 </body>
 
 </html>

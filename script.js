@@ -33,9 +33,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const seatingSemSelect = document.getElementById('seatingSem');
     const seatingSubjectSelect = document.getElementById('seatingSubject');
 
-    // ✅ PDF Button (may not exist on initial load — check first)
-    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
-
     // Global Data
     let students = [];
     let halls = [];
@@ -66,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
         filterSem.value = "";
         filterDiv.value = "";
         if (downloadPdfBtn) downloadPdfBtn.style.display = 'none';
-        alert('✅ Loaded default dataset (960 students)');
+        alert(' Loaded default dataset (960 students)');
     });
 
     // Apply Filter

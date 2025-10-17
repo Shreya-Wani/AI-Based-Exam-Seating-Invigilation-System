@@ -32,7 +32,8 @@ body {
     border-radius: 20px;
     padding: 25px;
     margin: 20px 0;
-    max-width: 600px; /* Keep it compact */
+    max-width: 600px;
+    /* Keep it compact */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -604,4 +605,217 @@ body {
         border-color: var(--primary);
         box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
     }
+
+    /* Responsive Design for All Phones & Small Tablets */
+    @media (max-width: 763px) {
+
+        .seat-allocation {
+            grid-template-columns: 1fr;
+            justify-items: center;
+        }
+
+        .seat-card {
+            width: 90%;
+        }
+
+
+        /* Headings */
+        .main-header h1 {
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        /* Input Grids */
+        .input-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        /* Tabs & Controls */
+        .tabs-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* centers all buttons/items horizontally */
+            justify-content: center;
+        }
+
+        .tabs-container button,
+        .tabs-container .tab-item {
+            width: 100%;
+            /* makes them same width */
+            text-align: center;
+            /* centers text inside */
+            justify-content: center;
+            /* centers icons + text */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            /* spacing between icon and text */
+        }
+
+        .controls {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+
+        /* Form Layout */
+        .form-group {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        /* Date Input Section */
+        .date-inputs-container {
+            background: rgba(15, 23, 42, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+        }
+
+        /* Adjust any buttons, cards, or containers */
+        button,
+        .btn {
+            width: 100%;
+            font-size: 1rem;
+            padding: 12px;
+        }
+
+        .card {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+    }
+
+    /* Extra Small Devices (phones, portrait) */
+    @media (max-width: 480px) {
+        .main-header h1 {
+            font-size: 1.6rem;
+        }
+
+        .input-grid,
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .tabs-container,
+        .controls,
+        .form-group {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .date-inputs-container {
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .date-input {
+            font-size: 0.9rem;
+            padding: 8px;
+        }
+    }
+
+    /* Small Devices (phones landscape, small tablets) */
+    @media (min-width: 481px) and (max-width: 767px) {
+        .main-header h1 {
+            font-size: 1.8rem;
+        }
+
+        .input-grid,
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .tabs-container {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .controls {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+
+    /* Medium Devices (tablets, small laptops) */
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .main-header h1 {
+            font-size: 2rem;
+        }
+
+        .input-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .tabs-container {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .controls {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+    }
+
+    /* Large Devices (laptops and desktops) */
+    @media (min-width: 1025px) and (max-width: 1440px) {
+        .main-header h1 {
+            font-size: 2.5rem;
+        }
+
+        .input-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    /* Extra Large Devices (big desktops and TVs) */
+    @media (min-width: 1441px) {
+        .main-header h1 {
+            font-size: 3rem;
+        }
+
+        .input-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+    }
+
 }
